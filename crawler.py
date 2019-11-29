@@ -1,11 +1,10 @@
 import requests
 from bs4 import BeautifulSoup as bs
 # from selenium import webdriver
-import re
-# >>> 공백 문자(\r\n\t)를 제거하기 위한 모듈
+import re # 공백 문자(\r\n\t)를 제거하기 위한 모듈
 import json
-# >>> 의안 데이터의 request 반환 형식이 json이기 때문에
 
+# >>> 의원의 소속 기관의 데이터까지 수집해야 하는 경우
 # def crawlCongressManDataUsingRequestFromPopup():
 #     url = 'http://likms.assembly.go.kr/bill/memVoteResult.do#'
 #     soup = bs(requests.get(url).text, 'html.parser')
@@ -31,7 +30,11 @@ import json
 #             }
 #             print(manInfo)
 
+
+count = 0
+# >>> 20대 국회 모든 의원 데이터 수집
 def crawlCongressManDataUsingRequest():
+    global count
     url = 'http://likms.assembly.go.kr/bill/memVoteResult.do#'
     soup = bs(requests.get(url).text, 'html.parser')
     congressMan = soup.select('#tbody > tr > td > a')
@@ -57,11 +60,15 @@ def crawlCongressManDataUsingRequest():
             'party': eachSoup.select_one('div.personInfo > dl > dd:nth-child(2)').text,
             'region': eachSoup.select_one('div.personInfo > dl > dd:nth-child(4)').text
         }
+        count += 1
         print(manInfo)
-crawlCongressManDataUsingRequest()
 
+crawlCongressManDataUsingRequest()
+print(count)
+
+# >>> 한 회차에 대한 모든 의안 데이터 수집
 def crawlBillData(sessionCd, currentsCd, currentsDt):
-    # >>> 의안 데이터는 json 형식으로 긁어옴
+    # 의안 데이터는 json 형식으로 긁어옴
     url = 'http://likms.assembly.go.kr/bill/billVoteResultListAjax.do'
     eachPage = requests.post(url, data={
         'ageFrom': 20,
@@ -74,11 +81,12 @@ def crawlBillData(sessionCd, currentsCd, currentsDt):
         'strPage': 1,
         'pageSize': 1000,
         'maxPage': 10,
-        'allCount': 88,
+        # 'allCount': 88,
         'tabMenuType': 'billVoteResult',
         'searchYn': 'ABC'
     })
     jsonData = json.loads(eachPage.text)
+    print(jsonData)
     for bill in jsonData['resListVo']:
         billInfo = {
             'billno': bill['billno'],
@@ -90,7 +98,7 @@ def crawlBillData(sessionCd, currentsCd, currentsDt):
             "disagree": bill['disagree'],
             "result": bill['result']
         }
-        print(billInfo)
+        # print(billInfo)
         # print('\n')
     # billno, billname, processdate, currcommitte
 
@@ -98,6 +106,10 @@ def crawlBillData(sessionCd, currentsCd, currentsDt):
     # dumps = json.dumps(parsed, ensure_ascii = False, indent=4, sort_keys=True)
     # print(dumps)
 
+# crawlBillData(371, 11, 20191119)
+
+
+# >>> 20대 국회 모든 회차에 대한 의안 데이터 수집
 def crawlBillDataFromEachSession():
     url = 'http://likms.assembly.go.kr/bill/billVoteResult.do'
     soup = bs(requests.get(url).text, 'html.parser')
@@ -110,8 +122,78 @@ def crawlBillDataFromEachSession():
         crawlBillData(sessionCd, currentsCd, currentsDt)
         # print(sessionCd + " " + currentsCd + " " + currentsDt)
         print('\n')
-
 # crawlBillDataFromEachSession()
+
+
+
+# >>> 한 회차에 있는 모든 의안에 대한 모든 의원의 찬반 데이터 수집
+def crawlConfirmData(sessionCd, currentsCd, currentsDt):
+    global count
+    url = 'http://likms.assembly.go.kr/bill/memVoteResult.do#'
+    soup = bs(requests.get(url).text, 'html.parser')
+    congressMan = soup.select('#tbody > tr > td > a')
+    for man in congressMan:
+        picDeptCd = man['href'].split('\'')[1]
+        eachPage = requests.post('http://likms.assembly.go.kr/bill/memVoteResultDetailAjax.do', data={
+            'ageFrom': 20,
+            'ageTo': 20,
+            'age': 20,
+            'sessionCd': sessionCd,
+            'currentsCd': currentsCd,
+            'currentsDt': currentsDt,
+            'orderColumn': 'ProposeDt',
+            'orderType': 'ASC',
+            'strPage': 1,
+            'pageSize': 1000,
+            'maxPage': 10,
+            'allCount': 75,
+            'tabMenuType': 'billVoteResult',
+            'picDeptCd': picDeptCd,
+            'tabMenuType': 'billVoteResult',
+            'searchYn': 'Y',
+            'searchKind': '전체'
+        })
+        jsonData = json.loads(eachPage.text)
+        for confirm in jsonData['resListVo']:
+            confirmInfo = {
+                'picDeptCd': picDeptCd,
+                'billNo': confirm['billNo'],
+                "resultVote": confirm['resultVote']
+            }
+            count = count + 1
+            print(confirmInfo)
+
+# crawlConfirmData(371, 10, 20191031)
+
+
+
+def crawlConfirmDataFromEachSession():
+    url = 'http://likms.assembly.go.kr/bill/billVoteResult.do'
+    soup = bs(requests.get(url).text, 'html.parser')
+    divs = soup.select('#ageListDiv > a')
+    for div in divs:
+        splits = div['onclick'].split('\'')
+        sessionCd = splits[3]
+        currentsCd = splits[5]
+        currentsDt = splits[7]
+        crawlConfirmData(sessionCd, currentsCd, currentsDt)
+        # print(sessionCd + " " + currentsCd + " " + currentsDt)
+        print('\n')
+
+# crawlConfirmDataFromEachSession()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
