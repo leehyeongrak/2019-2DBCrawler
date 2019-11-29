@@ -35,8 +35,8 @@ def crawlCongressManDataUsingRequest():
     url = 'http://likms.assembly.go.kr/bill/memVoteResult.do#'
     soup = bs(requests.get(url).text, 'html.parser')
     congressMan = soup.select('#tbody > tr > td > a')
-    print(congressMan)
     for man in congressMan:
+        picDeptCd = man['href'].split('\'')[1]
         eachPage = requests.post('http://likms.assembly.go.kr/bill/memVoteDetail.do', data={
             'ageFrom': 20,
             'ageTo': 20,
@@ -48,10 +48,11 @@ def crawlCongressManDataUsingRequest():
             'maxPage': 10,
             'tabMenuType': 'billVoteResult',
             'searchYn': '전체',
-            'picDeptCd': man['href'].split('\'')[1]
+            'picDeptCd': picDeptCd
         })
         eachSoup = bs(eachPage.text, 'html.parser')
         manInfo = {
+            'picDeptCd': picDeptCd,
             'name': eachSoup.select_one('p.lang01').text,
             'party': eachSoup.select_one('div.personInfo > dl > dd:nth-child(2)').text,
             'region': eachSoup.select_one('div.personInfo > dl > dd:nth-child(4)').text
