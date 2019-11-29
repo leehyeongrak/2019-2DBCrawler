@@ -83,7 +83,11 @@ def crawlBillData(sessionCd, currentsCd, currentsDt):
             'billno': bill['billno'],
             'billname': bill['billname'],
             'processdate': bill['processdate'],
-            'currcommitte': bill['currcommitte']
+            'currcommitte': bill['currcommitte'],
+            "agree": bill['agree'],
+            "withdraw": bill['withdraw'],
+            "disagree": bill['disagree'],
+            "result": bill['result']
         }
         print(billInfo)
         print('\n')
