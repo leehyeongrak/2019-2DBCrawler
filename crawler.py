@@ -3,14 +3,8 @@ from bs4 import BeautifulSoup as bs
 # from selenium import webdriver
 import re
 # >>> 공백 문자(\r\n\t)를 제거하기 위한 모듈
-
-# options = webdriver.ChromeOptions()
-# options.add_argument('headless')
-# options.add_argument('window-size=1920x1080')
-# options.add_argument("disable-gpu")
-
-# driver = webdriver.Chrome('/Users/rak/Python/chromedriver', chrome_options=options)
-# >>> headless로 드라이버 실행
+import json
+# >>> 의안 데이터의 request 반환 형식이 json이기 때문에
 
 # def crawlCongressManDataUsingRequestFromPopup():
 #     url = 'http://likms.assembly.go.kr/bill/memVoteResult.do#'
@@ -41,6 +35,7 @@ def crawlCongressManDataUsingRequest():
     url = 'http://likms.assembly.go.kr/bill/memVoteResult.do#'
     soup = bs(requests.get(url).text, 'html.parser')
     congressMan = soup.select('#tbody > tr > td > a')
+    print(congressMan)
     for man in congressMan:
         eachPage = requests.post('http://likms.assembly.go.kr/bill/memVoteDetail.do', data={
             'ageFrom': 20,
@@ -62,6 +57,48 @@ def crawlCongressManDataUsingRequest():
             'region': eachSoup.select_one('div.personInfo > dl > dd:nth-child(4)').text
         }
         print(manInfo)
+# crawlCongressManDataUsingRequest()
+
+def crawlBillData(sessionCd, currentsCd, currentsDt):
+    # >>> 의안 데이터는 json 형식으로 긁어옴
+    url = 'http://likms.assembly.go.kr/bill/billVoteResultListAjax.do'
+    eachPage = requests.post(url, data={
+        'ageFrom': 20,
+        'ageTo': 20,
+        'age': 20,
+        'sessionCd': sessionCd,
+        'currentsCd': currentsCd,
+        'currentsDt': currentsDt,
+        'orderType': 'ASC',
+        'strPage': 1,
+        'pageSize': 1000,
+        'maxPage': 10,
+        'allCount': 88,
+        'tabMenuType': 'billVoteResult',
+        'searchYn': 'ABC'
+    })
+    jsonData = json.loads(eachPage.text)
+    for bill in jsonData['resListVo']:
+        billInfo = {
+            'billno': bill['billno'],
+            'billname': bill['billname'],
+            'processdate': bill['processdate'],
+            'currcommitte': bill['currcommitte']
+        }
+        print(billInfo)
+        print('\n')
+    # billno, billname, processdate, currcommitte
+
+    # parsed = json.loads(eachPage.text)
+    # dumps = json.dumps(parsed, ensure_ascii = False, indent=4, sort_keys=True)
+    # print(dumps)
+
+crawlBillData(371, 11, 20191119)
+crawlBillData(371, 10, 20191031)
+# sessionCd: 371
+# currentsCd: 10
+# currentsDt: 20191031
+
 
 
 
@@ -71,6 +108,14 @@ def crawlCongressManDataUsingRequest():
 
 
 # >>> Selenium 크롤링
+# options = webdriver.ChromeOptions()
+# options.add_argument('headless')
+# options.add_argument('window-size=1920x1080')
+# options.add_argument("disable-gpu")
+#
+# driver = webdriver.Chrome('/Users/rak/Python/chromedriver', chrome_options=options)
+# >>> headless로 드라이버 실행
+#
 # driver = webdriver.Chrome('/Users/rak/Python/chromedriver')
 # driver.implicitly_wait(3)
 # # >>> 크롬 드라이버 생성 및 데이터의 완전한 로딩을 위한 3초 기다림
