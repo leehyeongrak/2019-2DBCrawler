@@ -57,7 +57,7 @@ def crawlCongressManDataUsingRequest():
             'region': eachSoup.select_one('div.personInfo > dl > dd:nth-child(4)').text
         }
         print(manInfo)
-# crawlCongressManDataUsingRequest()
+crawlCongressManDataUsingRequest()
 
 def crawlBillData(sessionCd, currentsCd, currentsDt):
     # >>> 의안 데이터는 json 형식으로 긁어옴
@@ -90,22 +90,27 @@ def crawlBillData(sessionCd, currentsCd, currentsDt):
             "result": bill['result']
         }
         print(billInfo)
-        print('\n')
+        # print('\n')
     # billno, billname, processdate, currcommitte
 
     # parsed = json.loads(eachPage.text)
     # dumps = json.dumps(parsed, ensure_ascii = False, indent=4, sort_keys=True)
     # print(dumps)
 
-crawlBillData(371, 11, 20191119)
-crawlBillData(371, 10, 20191031)
-# sessionCd: 371
-# currentsCd: 10
-# currentsDt: 20191031
+def crawlBillDataFromEachSession():
+    url = 'http://likms.assembly.go.kr/bill/billVoteResult.do'
+    soup = bs(requests.get(url).text, 'html.parser')
+    divs = soup.select('#ageListDiv > a')
+    for div in divs:
+        splits = div['onclick'].split('\'')
+        sessionCd = splits[3]
+        currentsCd = splits[5]
+        currentsDt = splits[7]
+        crawlBillData(sessionCd, currentsCd, currentsDt)
+        # print(sessionCd + " " + currentsCd + " " + currentsDt)
+        print('\n')
 
-
-
-
+# crawlBillDataFromEachSession()
 
 
 
