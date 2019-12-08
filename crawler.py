@@ -26,11 +26,11 @@ def crawlCongressManDataUsingRequestFromPopup():
             agency = agency.split(' ')[0]
 
             manInfo = {
-                'picDeptCd': picDeptCd,
-                'name': name,
+                'congressManCode': picDeptCd,
+                'congressManName': name,
                 'party': party,
                 'region': region,
-                'committeename': agency
+                'committeeName': agency
             }
 
             congressManList.append(manInfo)
@@ -54,59 +54,59 @@ def crawlCongressManDataUsingRequestFromPopup():
             eachSoup = bs(eachPage.text, 'html.parser')
             agency = ''
             manInfo = {
-                'picDeptCd': picDeptCd,
-                'name': eachSoup.select_one('p.lang01').text,
+                'congressManCode': picDeptCd,
+                'congressManName': eachSoup.select_one('p.lang01').text,
                 'party': eachSoup.select_one('div.personInfo > dl > dd:nth-child(2)').text,
                 'region': eachSoup.select_one('div.personInfo > dl > dd:nth-child(4)').text,
-                'committeename': agency
+                'committeeName': agency
             }
 
             congressManList.append(manInfo)
             count += 1
             print(manInfo)
             print(count)
+    jsonDict = {'data': congressManList}
     with open('congressMan.json', 'w', encoding='utf-8') as f:
-        json.dump(congressManList, f, ensure_ascii=False)
-    print(json.dump(congressManList, ensure_ascii=False))
+        json.dump(jsonDict, f, ensure_ascii=False)
     print(count)
 crawlCongressManDataUsingRequestFromPopup()
 
 # >>> 20대 국회 모든 의원 데이터 수집
-def crawlCongressManDataUsingRequest():
-    congressManList = []
-    count = 0
-    url = 'http://likms.assembly.go.kr/bill/memVoteResult.do#'
-    soup = bs(requests.get(url).text, 'html.parser')
-    congressMan = soup.select('#tbody > tr > td > a')
-    for man in congressMan:
-        picDeptCd = man['href'].split('\'')[1]
-        eachPage = requests.post('http://likms.assembly.go.kr/bill/memVoteDetail.do', data={
-            'ageFrom': 20,
-            'ageTo': 20,
-            'age': 20,
-            'orderColumn': 'ProposeDt',
-            'orderType': 'ASC',
-            'strPage': 1,
-            'pageSize': 10,
-            'maxPage': 10,
-            'tabMenuType': 'billVoteResult',
-            'searchYn': '전체',
-            'picDeptCd': picDeptCd
-        })
-        eachSoup = bs(eachPage.text, 'html.parser')
-        manInfo = {
-            'picDeptCd': picDeptCd,
-            'name': eachSoup.select_one('p.lang01').text,
-            'party': eachSoup.select_one('div.personInfo > dl > dd:nth-child(2)').text,
-            'region': eachSoup.select_one('div.personInfo > dl > dd:nth-child(4)').text
-        }
-        congressManList.append(manInfo)
-        count += 1
-        print(count)
-    toJson = json.dumps(congressManList, ensure_ascii = False)
-    print(congressManList)
-    print('\n\n\n\n\n')
-    print(toJson)
+# def crawlCongressManDataUsingRequest():
+#     congressManList = []
+#     count = 0
+#     url = 'http://likms.assembly.go.kr/bill/memVoteResult.do#'
+#     soup = bs(requests.get(url).text, 'html.parser')
+#     congressMan = soup.select('#tbody > tr > td > a')
+#     for man in congressMan:
+#         picDeptCd = man['href'].split('\'')[1]
+#         eachPage = requests.post('http://likms.assembly.go.kr/bill/memVoteDetail.do', data={
+#             'ageFrom': 20,
+#             'ageTo': 20,
+#             'age': 20,
+#             'orderColumn': 'ProposeDt',
+#             'orderType': 'ASC',
+#             'strPage': 1,
+#             'pageSize': 10,
+#             'maxPage': 10,
+#             'tabMenuType': 'billVoteResult',
+#             'searchYn': '전체',
+#             'picDeptCd': picDeptCd
+#         })
+#         eachSoup = bs(eachPage.text, 'html.parser')
+#         manInfo = {
+#             'congressManCode': picDeptCd,
+#             'coongressManName': eachSoup.select_one('p.lang01').text,
+#             'party': eachSoup.select_one('div.personInfo > dl > dd:nth-child(2)').text,
+#             'region': eachSoup.select_one('div.personInfo > dl > dd:nth-child(4)').text
+#         }
+#         congressManList.append(manInfo)
+#         count += 1
+#         print(count)
+#     toJson = json.dumps(congressManList, ensure_ascii = False)
+#     print(congressManList)
+#     print('\n\n\n\n\n')
+#     print(toJson)
 # crawlCongressManDataUsingRequest()
 
 # >>> 한 회차에 대한 모든 의안 데이터 수집
@@ -134,14 +134,14 @@ def crawlBillData(sessionCd, currentsCd, currentsDt, billList):
     # print(jsonData)
     for bill in jsonData['resListVo']:
         billInfo = {
-            'billno': bill['billno'],
-            'billname': bill['billname'],
-            'processdate': bill['processdate'],
-            'currcommitte': bill['currcommitte'],
+            'billCode': bill['billno'],
+            'billName': bill['billname'],
+            'processDate': bill['processdate'],
+            'committeeName': bill['currcommitte'],
             "agree": bill['agree'],
             "withdraw": bill['withdraw'],
             "disagree": bill['disagree'],
-            "result": bill['result']
+            "billResult": bill['result']
         }
         billList.append(billInfo)
         ct += 1
@@ -169,10 +169,8 @@ def crawlBillDataFromEachSession():
         currentsDt = splits[7]
         crawlBillData(sessionCd, currentsCd, currentsDt, billList)
         # print(sessionCd + " " + currentsCd + " " + currentsDt)
-    toJson = json.dumps(billList, ensure_ascii = False)
-    print(billList)
-    print('\n\n\n\n\n')
-    print(toJson)
+    with open('bill.json', 'w', encoding='utf-8') as f:
+        json.dump(billList, f, ensure_ascii=False)
 # crawlBillDataFromEachSession()
 
 
@@ -207,8 +205,8 @@ def crawlConfirmData(sessionCd, currentsCd, currentsDt, confirmList):
         jsonData = json.loads(eachPage.text)
         for confirm in jsonData['resListVo']:
             confirmInfo = {
-                'picDeptCd': picDeptCd,
-                'billNo': confirm['billNo'],
+                'congressManCode': picDeptCd,
+                'billCode': confirm['billNo'],
                 "resultVote": confirm['resultVote']
             }
             confirmList.append(confirmInfo)
@@ -237,8 +235,9 @@ def crawlConfirmDataFromEachSession():
         # print(sessionCd + " " + currentsCd + " " + currentsDt)
         print('\n')
     # toJson = json.dumps(confirmList, ensure_ascii = False)
-    with open('data.json', 'w', encoding='utf-8') as f:
-        json.dump(confirmList, f, ensure_ascii=False)
+    jsonDict = {'data': confirmList}
+    with open('confirm.json', 'w', encoding='utf-8') as f:
+        json.dump(jsonDict, f, ensure_ascii=False)
     # print(toJson)
 # crawlConfirmDataFromEachSession()
 
